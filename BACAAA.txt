@@ -1,0 +1,4 @@
+1. Install   pip install -r requirements.txt
+2. install flask    -m pip install flask werkzeug opencv-python mediapipe numpy
+3. install mediapipe    -m pip install mediapipe==0.10.9
+(bisa hapus "-m" kalau gak bisa)
