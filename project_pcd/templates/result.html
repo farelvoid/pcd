@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hasil Analisis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+    <h1>✨ Hasil Analisis</h1>
+
+    {% if annotated_path %}
+    <div class="card">
+        <p style="font-size:13px; color:#aaa; margin-bottom:6px;">📍 Landmark terdeteksi</p>
+        <img src="/{{ annotated_path }}" alt="Foto dengan landmark">
+    </div>
+    {% else %}
+    <div class="card">
+        <img src="/{{ image_path }}" alt="Foto upload">
+    </div>
+    {% endif %}
+
+    <div class="result">
+        <h3>Bentuk Wajah: {{ face_shape }}</h3>
+        <p><b>Jenis Rambut:</b> {{ hair_type or "-" }}</p>
+        <p>Rekomendasi: {{ recommendation }}</p>
+    </div>
+
+    <a href="/" class="back-btn">← Kembali</a>
+</div>
+
+</body>
+</html>

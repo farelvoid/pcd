@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HairStyle AI</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Open+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1><i class="fa-solid fa-scissors"></i> HairStyle AI</h1>
+    <p class="subtitle">Smart face analysis & hairstyle recommendation</p>
+
+    <div class="inner-box">
+
+    <form method="POST" action="/process" enctype="multipart/form-data">
+
+        <!-- Upload -->
+        <label class="upload-label">
+            📤 Upload Foto
+            <input type="file" id="fileInput" name="image" required 
+                onchange="document.getElementById('fileName').innerText = '✅ ' + this.files[0].name">
+        </label>
+
+        <p id="fileName" style="margin-top:10px; font-size:14px; color:#ffffff; font-weight:500;"></p>
+
+    <div class="form-group">
+        <label>Jenis Kelamin</label>
+        <select name="gender" id="genderSelect">
+            <option value="">-- Pilih --</option>
+            <option value="female">Wanita</option>
+            <option value="male">Pria</option>
+        </select>
+    </div>
+
+
+    <!-- Hijab (hidden dulu) -->
+    <div id="hijabSection" class="form-group" style="display:none;">
+        <label>Pakai Hijab?</label>
+        <select name="hijab">
+            <option value="no">Tidak</option>
+            <option value="yes">Ya</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Jenis Rambut</label>
+        <select name="hair_type" required>
+            <option value="">-- Pilih --</option>
+            <option value="straight">Lurus</option>
+            <option value="wavy">Bergelombang</option>
+            <option value="curly">Keriting</option>
+        </select>
+    </div>
+    
+    </div>
+        <button type="submit">Analisis</button>
+    </div>
+
+</div>
+
+<script>
+const input = document.getElementById("fileInput");
+const text = document.getElementById("fileName");
+
+input.onchange = function() {
+    if (this.files.length > 0) {
+        text.innerHTML = "📸 Foto selesai diupload";
+    }
+};
+</script>
+
+<script>
+const gender = document.getElementById("genderSelect");
+const hijab = document.getElementById("hijabSection");
+
+gender.onchange = function() {
+    if (this.value === "female") {
+        hijab.style.display = "block";
+    } else {
+        hijab.style.display = "none";
+    }
+};
+</script>
+
+</body>
+</html>
