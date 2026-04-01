@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hasil Analisis — HairStyle AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0d0d14;--surface:#13131f;--card:#1c1c2e;--border:rgba(255,255,255,0.07);
+  --accent:#c8a8ff;--accent2:#ff8ec4;--accent3:#8ecfff;
+  --text:#e8e8f0;--muted:rgba(232,232,240,0.45);
+  --glow:0 0 60px rgba(200,168,255,0.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--text);
+  min-height:100vh;padding:40px 16px 80px;overflow-x:hidden;
+  display:flex;flex-direction:column;align-items:center;
+}
+.orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
+.orb1{width:500px;height:500px;background:radial-gradient(circle,#4a1e8a44,transparent 70%);top:-100px;left:-100px}
+.orb2{width:400px;height:400px;background:radial-gradient(circle,#8a1e5544,transparent 70%);bottom:-80px;right:-80px}
+
+/* ── Page wrapper ── */
+.page{position:relative;z-index:1;width:100%;max-width:900px}
+
+/* ── Header ── */
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px;flex-wrap:wrap;gap:12px}
+.logo{display:inline-flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 16px rgba(200,168,255,0.35)}
+.btn-back{
+  display:inline-flex;align-items:center;gap:8px;padding:10px 20px;
+  border-radius:50px;border:1.5px solid var(--border);background:rgba(255,255,255,0.04);
+  color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
+  text-decoration:none;transition:all .2s;cursor:pointer;
+}
+.btn-back:hover{border-color:var(--accent);color:var(--accent);background:rgba(200,168,255,0.06)}
+
+/* ── Section title ── */
+.section-title{
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;
+}
+
+/* ── Main grid ── */
+.main-grid{display:grid;grid-template-columns:280px 1fr;gap:24px;margin-bottom:40px}
+@media(max-width:640px){.main-grid{grid-template-columns:1fr}}
+
+/* ── Photo panel ── */
+.photo-panel{
+  background:var(--card);border:1px solid var(--border);border-radius:24px;
+  padding:20px;box-shadow:var(--glow);
+  animation:slideUp .5s ease both;
+}
+.photo-panel img{
+  width:100%;aspect-ratio:1/1;object-fit:cover;
+  border-radius:16px;border:1px solid var(--border);display:block;margin-bottom:16px;
+}
+.face-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:50px;font-size:12px;font-weight:600;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--ink);
+  margin-bottom:12px;
+}
+.meta-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--border)}
+.meta-row:last-child{border-bottom:none}
+.meta-key{color:var(--text);font-weight:500;min-width:90px}
+.lm-note{margin-top:12px;font-size:11px;color:rgba(200,168,255,0.5);display:flex;align-items:center;gap:5px}
+
+/* ── Info panel ── */
+.info-panel{
+  background:var(--card);border:1px solid var(--border);border-radius:24px;
+  padding:28px;box-shadow:var(--glow);
+  animation:slideUp .5s .1s ease both;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+
+.face-shape-display{margin-bottom:24px}
+.face-shape-name{
+  font-family:'Syne',sans-serif;font-size:42px;font-weight:800;line-height:1;
+  background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:4px;
+}
+.face-shape-sub{font-size:13px;color:var(--muted);font-style:italic}
+
+/* Measurement bars */
+.measurements{margin:20px 0;display:flex;flex-direction:column;gap:10px}
+.mbar-row{display:flex;align-items:center;gap:12px}
+.mbar-label{font-size:12px;color:var(--muted);width:80px;flex-shrink:0}
+.mbar-track{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
+.mbar-fill{height:100%;border-radius:4px;animation:barIn .8s ease both}
+@keyframes barIn{from{width:0!important}to{}}
+.mbar-val{font-size:11px;color:var(--muted);width:28px;text-align:right;flex-shrink:0}
+
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+/* Hint */
+.rekom-hint{
+  display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);
+  background:rgba(200,168,255,0.05);border:1px solid rgba(200,168,255,0.1);
+  border-radius:12px;padding:10px 14px;margin-bottom:4px;
+}
+
+/* ── Error state ── */
+.error-panel{
+  background:rgba(255,80,80,0.08);border:1px solid rgba(255,80,80,0.2);
+  border-radius:20px;padding:28px;text-align:center;
+}
+.error-icon{font-size:40px;margin-bottom:12px}
+.error-msg{font-size:14px;color:rgba(255,180,180,0.9);line-height:1.7}
+
+/* ══════════════════════════════════════════════
+   RECOMMENDATION CARDS
+══════════════════════════════════════════════ */
+.rekom-section{margin-top:8px}
+.rekom-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:600px){.rekom-grid{grid-template-columns:1fr}}
+
+.rekom-card{
+  background:var(--card);border:1.5px solid var(--border);border-radius:22px;
+  overflow:hidden;cursor:pointer;
+  transition:border-color .25s,transform .25s,box-shadow .25s;
+  opacity:0;transform:translateY(30px);
+  /* animated in via JS */
+}
+.rekom-card.visible{opacity:1;transform:none;transition:opacity .5s ease,transform .5s ease,border-color .25s,box-shadow .25s}
+.rekom-card:hover{
+  border-color:var(--accent);
+  transform:translateY(-4px)!important;
+  box-shadow:0 12px 40px rgba(200,168,255,0.2);
+}
+
+/* SVG illustration area */
+.rekom-svg{width:100%;height:150px;display:block;overflow:hidden}
+.rekom-svg svg{width:100%;height:100%}
+
+/* Card body */
+.rekom-body{padding:16px}
+.rekom-number{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:4px;
+}
+.rekom-name{
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
+  margin-bottom:8px;line-height:1.2;
+}
+.rekom-tap{
+  display:flex;align-items:center;gap:4px;
+  font-size:11px;color:var(--accent);font-weight:500;
+}
+
+/* Number badge colors */
+.num-1{color:var(--accent)}
+.num-2{color:var(--accent2)}
+.num-3{color:var(--accent3)}
+
+/* ══════════════════════════════════════════════
+   REASON MODAL
+══════════════════════════════════════════════ */
+.overlay{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(5,5,12,0.75);backdrop-filter:blur(14px);
+  align-items:center;justify-content:center;padding:20px;
+}
+.overlay.open{display:flex}
+
+.modal{
+  background:linear-gradient(160deg,#1a1a30,#22223a);
+  border:1px solid rgba(200,168,255,0.15);border-radius:28px;
+  width:100%;max-width:480px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,0.7),0 0 0 1px rgba(200,168,255,0.08);
+  animation:modalIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes modalIn{from{transform:scale(.85) translateY(20px);opacity:0}to{transform:none;opacity:1}}
+
+.modal-svg{width:100%;height:200px;overflow:hidden;position:relative}
+.modal-svg svg{width:100%;height:100%}
+.modal-svg-fade{
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 40%,#1a1a30 100%);
+}
+.modal-close{
+  position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;
+  background:rgba(0,0,0,0.5);border:none;color:var(--text);font-size:14px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .2s;z-index:10;
+}
+.modal-close:hover{background:rgba(220,50,80,0.6)}
+
+.modal-body{padding:20px 24px 28px}
+.modal-num{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.modal-name{
+  font-family:'Syne',sans-serif;font-size:24px;font-weight:800;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:4px;
+}
+.modal-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:50px;font-size:11px;background:rgba(255,255,255,0.06);color:var(--muted);margin-bottom:16px}
+.modal-why{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.modal-reasons{list-style:none;margin-bottom:16px}
+.modal-reasons li{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:13.5px;color:rgba(232,232,240,0.85);line-height:1.65;margin-bottom:8px;
+}
+.reason-dot{
+  width:20px;height:20px;border-radius:50%;flex-shrink:0;margin-top:1px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--ink);font-weight:700;
+}
+.modal-tip{
+  background:rgba(142,207,255,0.07);border:1px solid rgba(142,207,255,0.15);
+  border-radius:14px;padding:12px 14px;font-size:12.5px;color:rgba(142,207,255,0.8);line-height:1.65;
+}
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<!-- REASON MODAL -->
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div style="position:relative">
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+      <div class="modal-svg" id="modalSvg"></div>
+      <div class="modal-svg-fade"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-num"  id="modalNum"></div>
+      <div class="modal-name" id="modalName"></div>
+      <div class="modal-badge" id="modalBadge"></div>
+      <div class="modal-why">Kenapa cocok untuk kamu?</div>
+      <ul class="modal-reasons" id="modalReasons"></ul>
+      <div class="modal-tip" id="modalTip"></div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="logo"><div class="logo-icon">✂</div> HairStyle AI</div>
+    <a href="/" class="btn-back">← Upload Lagi</a>
+  </div>
+
+  {% if error %}
+  <!-- Error state -->
+  <div class="error-panel">
+    <div class="error-icon">😕</div>
+    <div class="modal-name" style="margin-bottom:8px">Analisis Gagal</div>
+    <div class="error-msg">{{ error }}</div>
+    <br>
+    <a href="/" class="btn-back" style="display:inline-flex;margin-top:4px">← Coba Lagi</a>
+  </div>
+
+  {% else %}
+
+  <!-- Main grid: photo + info -->
+  <div class="main-grid">
+
+    <!-- Photo -->
+    <div class="photo-panel">
+      <p class="section-title">Foto Analisis</p>
+      {% if annotated_path %}
+      <img src="/{{ annotated_path }}" alt="Hasil analisis">
+      {% else %}
+      <img src="/{{ image_path }}" alt="Foto upload">
+      {% endif %}
+
+      <div class="face-badge">{{ face_shape }}</div>
+
+      <div class="meta-row"><span class="meta-key">Jenis Kelamin</span><span>{{ 'Perempuan' if gender=='female' else 'Laki-laki' }}</span></div>
+      {% if gender == 'female' %}
+      <div class="meta-row"><span class="meta-key">Hijab</span><span>{{ 'Ya' if hijab=='yes' else 'Tidak' }}</span></div>
+      {% endif %}
+      <div class="meta-row"><span class="meta-key">Jenis Rambut</span><span>{{ {'straight':'Lurus','wavy':'Bergelombang','curly':'Keriting'}.get(hair_type, hair_type) }}</span></div>
+
+      {% if annotated_path %}
+      <div class="lm-note">📍 MediaPipe landmark terdeteksi</div>
+      {% endif %}
+    </div>
+
+    <!-- Info -->
+    <div class="info-panel">
+      <p class="section-title">Hasil Deteksi</p>
+      <div class="face-shape-display">
+        <div class="face-shape-name">{{ face_shape }}</div>
+        <div class="face-shape-sub">Bentuk wajah terdeteksi melalui 468 titik landmark</div>
+      </div>
+
+      <div class="measurements" id="measurements">
+        <!-- Rendered by JS -->
+      </div>
+
+      <hr class="divider">
+
+      <div class="rekom-hint">
+        💡 Klik kartu rekomendasi di bawah untuk melihat alasan kenapa gaya tersebut cocok untukmu
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommendation section -->
+  <div class="rekom-section">
+    <p class="section-title" style="margin-bottom:20px">Rekomendasi Gaya Rambut</p>
+    <div class="rekom-grid" id="rekomGrid">
+
+      {% for rec in recommendations %}
+      <div class="rekom-card" id="card{{ loop.index }}" onclick="openModal('{{ rec }}', {{ loop.index }})">
+        <div class="rekom-svg" id="svg{{ loop.index }}"><!-- SVG inserted by JS --></div>
+        <div class="rekom-body">
+          <div class="rekom-number num-{{ loop.index }}">Pilihan {{ loop.index }}</div>
+          <div class="rekom-name">{{ rec }}</div>
+          <div class="rekom-tap">Lihat alasan →</div>
+        </div>
+      </div>
+      {% endfor %}
+
+    </div>
+  </div>
+
+  {% endif %}
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// SVG HAIR ILLUSTRATIONS
+// ══════════════════════════════════════════════
+function makeSVG(name, w, h) {
+  const W = w || 300, H = h || 150;
+  const cx = W/2, ch = H;
+
+  // Helpers
+  const head = (r=48, cy=ch*0.5, fill='#d4956a') =>
+    `<ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r*1.15}" fill="${fill}"/>`;
+  const eye = (dx=14) =>
+    `<ellipse cx="${cx-dx}" cy="${ch*0.5+4}" rx="4.5" ry="5.5" fill="#2a2a2a" opacity=".9"/>
+     <ellipse cx="${cx+dx}" cy="${ch*0.5+4}" rx="4.5" ry="5.5" fill="#2a2a2a" opacity=".9"/>`;
+  const mouth = () =>
+    `<path d="M${cx-10} ${ch*0.5+18} Q${cx} ${ch*0.5+25} ${cx+10} ${ch*0.5+18}" stroke="#b06845" stroke-width="2" fill="none"/>`;
+  const bg = (c1, c2) =>
+    `<defs><linearGradient id="bg_${name.replace(/\s/g,'_')}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></linearGradient></defs>
+     <rect width="${W}" height="${H}" fill="url(#bg_${name.replace(/\s/g,'_')})"/>`;
+  const fade = (col='#1a1a38') =>
+    `<rect width="${W}" height="${H}" fill="url(#fade_${name.replace(/\s/g,'_')})"/>
+     <defs><linearGradient id="fade_${name.replace(/\s/g,'_')}" x1="0" y1="0" x2="0" y2="1">
+       <stop offset="40%" stop-color="transparent"/>
+       <stop offset="100%" stop-color="${col}"/>
+     </linearGradient></defs>`;
+
+  const styles = {
+    // ──────────── PEREMPUAN ────────────
+    "Long layer": () => `${bg('#1e1040','#0e2030')}
+      ${head(46,ch*.48)}
+      <path d="M${cx-52} ${ch*.38} Q${cx-68} ${ch*.6} ${cx-62} ${ch} L${cx+62} ${ch} Q${cx+68} ${ch*.6} ${cx+52} ${ch*.38}" fill="#5a3510"/>
+      <path d="M${cx-56} ${ch*.4} Q${cx-70} ${ch*.65} ${cx-65} ${ch}" fill="#6b4020" opacity=".55"/>
+      <path d="M${cx+56} ${ch*.4} Q${cx+70} ${ch*.65} ${cx+65} ${ch}" fill="#6b4020" opacity=".55"/>
+      <ellipse cx="${cx}" cy="${ch*.34}" rx="52" ry="22" fill="#4a2c0a"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Bob sebahu": () => `${bg('#1e1040','#0e1a30')}
+      ${head(46,ch*.45)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="54" ry="22" fill="#2a1a5c"/>
+      <path d="M${cx-52} ${ch*.38} L${cx-50} ${ch*.78} L${cx+50} ${ch*.78} L${cx+52} ${ch*.38}" fill="#3b2a7a"/>
+      <rect x="${cx-50}" y="${ch*.75}" width="100" height="7" rx="3.5" fill="#2a1a5c"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Curtain bangs": () => `${bg('#141a1e','#1a0e20')}
+      ${head(46,ch*.47)}
+      <ellipse cx="${cx}" cy="${ch*.34}" rx="54" ry="22" fill="#3d2206"/>
+      <path d="M${cx-52} ${ch*.38} Q${cx-65} ${ch*.6} ${cx-62} ${ch} L${cx+62} ${ch} Q${cx+65} ${ch*.6} ${cx+52} ${ch*.38}" fill="#4e2d08"/>
+      <path d="M${cx-14} ${ch*.34} Q${cx-26} ${ch*.46} ${cx-38} ${ch*.52} Q${cx-48} ${ch*.54} ${cx-52} ${ch*.52} Q${cx-46} ${ch*.36} ${cx-14} ${ch*.34}" fill="#5a3510"/>
+      <path d="M${cx+14} ${ch*.34} Q${cx+26} ${ch*.46} ${cx+38} ${ch*.52} Q${cx+48} ${ch*.54} ${cx+52} ${ch*.52} Q${cx+46} ${ch*.36} ${cx+14} ${ch*.34}" fill="#5a3510"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Beach waves": () => `${bg('#1a2e14','#1a140e')}
+      ${head(46,ch*.45)}
+      <path d="M${cx-52} ${ch*.38} Q${cx-60} ${ch*.5} ${cx-54} ${ch*.62} Q${cx-48} ${ch*.74} ${cx-56} ${ch*.86} Q${cx-62} ${ch*.94} ${cx-58} ${ch} L${cx+58} ${ch} Q${cx+62} ${ch*.94} ${cx+56} ${ch*.86} Q${cx+48} ${ch*.74} ${cx+54} ${ch*.62} Q${cx+60} ${ch*.5} ${cx+52} ${ch*.38}" fill="#a06e20"/>
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="52" ry="20" fill="#8b5e1a"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Natural curls": () => `${bg('#100a00','#1a0808')}
+      ${head(46,ch*.52,'#c8855a')}
+      <circle cx="${cx}" cy="${ch*.32}" r="38" fill="#1a0a00"/>
+      ${[-22,-12,0,12,22].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.28}" r="12" fill="#2a1200"/>`).join('')}
+      ${[-28,28].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.44}" r="10" fill="#1a0a00"/><circle cx="${cx+dx*1.05}" cy="${ch*.54}" r="9" fill="#1a0a00"/>`).join('')}
+      ${eye()}${mouth()}${fade()}`,
+
+    "Blunt bob": () => `${bg('#080e18','#180810')}
+      ${head(46,ch*.44)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="54" ry="20" fill="#1a0a0a"/>
+      <path d="M${cx-52} ${ch*.38} L${cx-50} ${ch*.72} L${cx+50} ${ch*.72} L${cx+52} ${ch*.38}" fill="#220e0e"/>
+      <rect x="${cx-50}" y="${ch*.70}" width="100" height="7" rx="2" fill="#1a0a0a"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Long bob": () => `${bg('#080818','#180a18')}
+      ${head(46,ch*.44)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="54" ry="20" fill="#0a1a1a"/>
+      <path d="M${cx-52} ${ch*.38} L${cx-50} ${ch*.82} L${cx+50} ${ch*.82} L${cx+52} ${ch*.38}" fill="#102020"/>
+      <rect x="${cx-50}" y="${ch*.80}" width="100" height="7" rx="3" fill="#0a1a1a"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Curly bob": () => `${bg('#0a1408','#140814')}
+      ${head(46,ch*.50,'#c8855a')}
+      <circle cx="${cx}" cy="${ch*.34}" r="36" fill="#1a0800"/>
+      ${[-20,-8,5,18].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.30}" r="11" fill="#260e00"/>`).join('')}
+      ${[-28,28].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.46}" r="10" fill="#1a0800"/><circle cx="${cx+dx*1.04}" cy="${ch*.56}" r="9" fill="#1a0800"/>`).join('')}
+      ${eye()}${mouth()}${fade()}`,
+
+    "Poni depan": () => `${bg('#1a0e08','#0e1408')}
+      ${head(46,ch*.47)}
+      <ellipse cx="${cx}" cy="${ch*.34}" rx="52" ry="20" fill="#3d1a00"/>
+      <path d="M${cx-52} ${ch*.38} Q${cx-64} ${ch*.6} ${cx-60} ${ch} L${cx+60} ${ch} Q${cx+64} ${ch*.6} ${cx+52} ${ch*.38}" fill="#4e2200"/>
+      <rect x="${cx-46}" y="${ch*.36}" width="92" height="20" rx="4" fill="#5a2800"/>
+      <path d="M${cx-46} ${ch*.46} Q${cx} ${ch*.52} ${cx+46} ${ch*.46}" stroke="#6b3000" stroke-width="2.5" fill="none"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Wavy bob": () => `${bg('#060e18','#100614')}
+      ${head(46,ch*.44)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="54" ry="20" fill="#1a3040"/>
+      <path d="M${cx-52} ${ch*.38} Q${cx-60} ${ch*.50} ${cx-52} ${ch*.62} Q${cx-44} ${ch*.74} ${cx-52} ${ch*.82} L${cx+52} ${ch*.82} Q${cx+44} ${ch*.74} ${cx+52} ${ch*.62} Q${cx+60} ${ch*.50} ${cx+52} ${ch*.38}" fill="#1e4060"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Poni samping": () => `${bg('#1a0e08','#0a1208')}
+      ${head(46,ch*.47)}
+      <ellipse cx="${cx}" cy="${ch*.34}" rx="52" ry="20" fill="#5a2800"/>
+      <path d="M${cx-52} ${ch*.38} Q${cx-64} ${ch*.6} ${cx-60} ${ch} L${cx+60} ${ch} Q${cx+64} ${ch*.6} ${cx+52} ${ch*.38}" fill="#6b3200"/>
+      <path d="M${cx-48} ${ch*.36} Q${cx-10} ${ch*.32} ${cx+36} ${ch*.46} Q${cx+24} ${ch*.50} ${cx} ${ch*.46} Q${cx-20} ${ch*.50} ${cx-48} ${ch*.42} Z" fill="#7a3c08"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Soft layer": () => `${bg('#0e1020','#1a0e20')}
+      ${head(46,ch*.46)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="52" ry="20" fill="#1a1040"/>
+      <path d="M${cx-50} ${ch*.38} Q${cx-60} ${ch*.58} ${cx-58} ${ch*.84} L${cx+58} ${ch*.84} Q${cx+60} ${ch*.58} ${cx+50} ${ch*.38}" fill="#251565"/>
+      <path d="M${cx-54} ${ch*.40} Q${cx-62} ${ch*.60} ${cx-60} ${ch*.86}" stroke="#3a228a" stroke-width="3" fill="none" opacity=".6"/>
+      <path d="M${cx+54} ${ch*.40} Q${cx+62} ${ch*.60} ${cx+60} ${ch*.86}" stroke="#3a228a" stroke-width="3" fill="none" opacity=".6"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Wavy medium": () => `${bg('#0e1a14','#140e1a')}
+      ${head(46,ch*.44)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="52" ry="20" fill="#1a4030"/>
+      <path d="M${cx-50} ${ch*.38} Q${cx-58} ${ch*.50} ${cx-50} ${ch*.62} Q${cx-42} ${ch*.74} ${cx-50} ${ch*.86} L${cx+50} ${ch*.86} Q${cx+42} ${ch*.74} ${cx+50} ${ch*.62} Q${cx+58} ${ch*.50} ${cx+50} ${ch*.38}" fill="#1e5040"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Layer panjang": () => `${bg('#1e1040','#0e1820')}
+      ${head(46,ch*.46)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="52" ry="22" fill="#4a2c0a"/>
+      <path d="M${cx-52} ${ch*.38} Q${cx-65} ${ch*.58} ${cx-62} ${ch} L${cx+62} ${ch} Q${cx+65} ${ch*.58} ${cx+52} ${ch*.38}" fill="#5a3510"/>
+      <path d="M${cx-56} ${ch*.42} Q${cx-68} ${ch*.62} ${cx-66} ${ch}" fill="#6b4020" opacity=".45"/>
+      <path d="M${cx+56} ${ch*.42} Q${cx+68} ${ch*.62} ${cx+66} ${ch}" fill="#6b4020" opacity=".45"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    // ──────────── PRIA ────────────
+    "Pompadour": () => `${bg('#08140a','#0a0818')}
+      ${head(48,ch*.54,'#d4956a')}
+      <ellipse cx="${cx}" cy="${ch*.36}" rx="50" ry="16" fill="#1a0a00"/>
+      <path d="M${cx-46} ${ch*.4} Q${cx-28} ${ch*.14} ${cx+28} ${ch*.16} Q${cx+40} ${ch*.22} ${cx+44} ${ch*.4} Q${cx+24} ${ch*.30} ${cx} ${ch*.32} Q${cx-24} ${ch*.30} ${cx-46} ${ch*.4}" fill="#220e00"/>
+      <path d="M${cx-16} ${ch*.36} Q${cx} ${ch*.24} ${cx+20} ${ch*.28} Q${cx+10} ${ch*.22} ${cx} ${ch*.24}" fill="#2e1400" opacity=".8"/>
+      <rect x="${cx-46}" y="${ch*.42}" width="10" height="36" rx="5" fill="#d4956a" opacity=".3"/>
+      <rect x="${cx+36}" y="${ch*.42}" width="10" height="36" rx="5" fill="#d4956a" opacity=".3"/>
+      ${eye(14)}${mouth()}${fade('#08140a')}`,
+
+    "Slick back": () => `${bg('#080810','#100808')}
+      ${head(48,ch*.54,'#d4956a')}
+      <path d="M${cx-46} ${ch*.46} Q${cx-44} ${ch*.32} ${cx} ${ch*.28} Q${cx+44} ${ch*.32} ${cx+46} ${ch*.46} Q${cx+24} ${ch*.38} ${cx} ${ch*.40} Q${cx-24} ${ch*.38} ${cx-46} ${ch*.46}" fill="#0a0a0a"/>
+      <path d="M${cx-42} ${ch*.42} Q${cx} ${ch*.30} ${cx+42} ${ch*.42}" stroke="#1a1a1a" stroke-width="3" fill="none"/>
+      <path d="M${cx-42} ${ch*.46} Q${cx} ${ch*.34} ${cx+42} ${ch*.46}" stroke="#1a1a1a" stroke-width="2" fill="none" opacity=".5"/>
+      <rect x="${cx-46}" y="${ch*.44}" width="10" height="30" rx="5" fill="#d4956a" opacity=".28"/>
+      <rect x="${cx+36}" y="${ch*.44}" width="10" height="30" rx="5" fill="#d4956a" opacity=".28"/>
+      ${eye(14)}${mouth()}${fade('#080810')}`,
+
+    "Textured quiff": () => `${bg('#080e10','#100810')}
+      ${head(48,ch*.54,'#d4956a')}
+      <path d="M${cx-44} ${ch*.44} Q${cx-36} ${ch*.20} ${cx} ${ch*.16} Q${cx+36} ${ch*.20} ${cx+44} ${ch*.44}" fill="#1a0e00"/>
+      <path d="M${cx-30} ${ch*.38} Q${cx-18} ${ch*.22} ${cx-4} ${ch*.20} Q${cx+10} ${ch*.18} ${cx+22} ${ch*.26} Q${cx+34} ${ch*.34} ${cx+38} ${ch*.44}" fill="#261400" opacity=".8"/>
+      <path d="M${cx-18} ${ch*.34} Q${cx-6} ${ch*.24} ${cx+6} ${ch*.26}" stroke="#3a1e00" stroke-width="2.5" fill="none"/>
+      <path d="M${cx+4} ${ch*.22} Q${cx+16} ${ch*.18} ${cx+22} ${ch*.26}" stroke="#3a1e00" stroke-width="2.5" fill="none"/>
+      <rect x="${cx-46}" y="${ch*.42}" width="10" height="34" rx="5" fill="#d4956a" opacity=".3"/>
+      <rect x="${cx+36}" y="${ch*.42}" width="10" height="34" rx="5" fill="#d4956a" opacity=".3"/>
+      ${eye(14)}${mouth()}${fade('#080e10')}`,
+
+    "High fade": () => `${bg('#060606','#0a0a14')}
+      ${head(48,ch*.54,'#d4956a')}
+      <ellipse cx="${cx}" cy="${ch*.38}" rx="42" ry="20" fill="#0a0a0a"/>
+      <rect x="${cx-46}" y="${ch*.42}" width="12" height="22" rx="6" fill="#d4956a" opacity=".18"/>
+      <rect x="${cx+34}" y="${ch*.42}" width="12" height="22" rx="6" fill="#d4956a" opacity=".18"/>
+      ${eye(14)}${mouth()}${fade('#060606')}`,
+
+    "Curly top fade": () => `${bg('#060606','#100808')}
+      ${head(48,ch*.54,'#c8855a')}
+      <circle cx="${cx}" cy="${ch*.34}" r="34" fill="#0a0500"/>
+      ${[-18,-7,4,15].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.30}" r="11" fill="#150800"/>`).join('')}
+      ${[-24,24].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.40}" r="9" fill="#150800"/>`).join('')}
+      <defs><linearGradient id="fd1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a0500"/><stop offset="100%" stop-color="#c8855a" stop-opacity="0"/></linearGradient></defs>
+      <rect x="${cx-46}" y="${ch*.42}" width="12" height="28" rx="6" fill="url(#fd1)"/>
+      <rect x="${cx+34}" y="${ch*.42}" width="12" height="28" rx="6" fill="url(#fd1)"/>
+      ${eye(14)}${mouth()}${fade('#060606')}`,
+
+    "Undercut": () => `${bg('#080e10','#100808')}
+      ${head(48,ch*.54,'#d4956a')}
+      <path d="M${cx-44} ${ch*.42} Q${cx-36} ${ch*.18} ${cx} ${ch*.14} Q${cx+36} ${ch*.18} ${cx+44} ${ch*.42} Q${cx+22} ${ch*.30} ${cx} ${ch*.32} Q${cx-22} ${ch*.30} ${cx-44} ${ch*.42}" fill="#1a1a00"/>
+      <path d="M${cx-36} ${ch*.32} Q${cx-18} ${ch*.18} ${cx+18} ${ch*.20} Q${cx+28} ${ch*.26} ${cx+32} ${ch*.36}" fill="#2e2e00" opacity=".6"/>
+      <rect x="${cx-46}" y="${ch*.42}" width="12" height="44" rx="6" fill="#d4956a" opacity=".22"/>
+      <rect x="${cx+34}" y="${ch*.42}" width="12" height="44" rx="6" fill="#d4956a" opacity=".22"/>
+      ${eye(14)}${mouth()}${fade('#080e10')}`,
+
+    "Crew cut": () => `${bg('#080808','#100810')}
+      ${head(48,ch*.54,'#d4956a')}
+      <ellipse cx="${cx}" cy="${ch*.40}" rx="46" ry="22" fill="#0a0a0a"/>
+      <ellipse cx="${cx}" cy="${ch*.38}" rx="44" ry="18" fill="#141414"/>
+      <rect x="${cx-46}" y="${ch*.42}" width="12" height="42" rx="6" fill="#d4956a" opacity=".28"/>
+      <rect x="${cx+34}" y="${ch*.42}" width="12" height="42" rx="6" fill="#d4956a" opacity=".28"/>
+      ${eye(14)}${mouth()}${fade('#080808')}`,
+
+    "Textured crop": () => `${bg('#0a0e08','#080a14')}
+      ${head(48,ch*.54,'#d4956a')}
+      <path d="M${cx-44} ${ch*.44} Q${cx-40} ${ch*.30} ${cx} ${ch*.26} Q${cx+40} ${ch*.30} ${cx+44} ${ch*.44} Q${cx+24} ${ch*.38} ${cx} ${ch*.40} Q${cx-24} ${ch*.38} ${cx-44} ${ch*.44}" fill="#1a0800"/>
+      <rect x="${cx-32}" y="${ch*.34}" width="64" height="14" rx="4" fill="#220e00"/>
+      <path d="M${cx-24} ${ch*.38} Q${cx-12} ${ch*.34} ${cx-2} ${ch*.36}" stroke="#3a1800" stroke-width="2" fill="none"/>
+      <path d="M${cx+4} ${ch*.34} Q${cx+16} ${ch*.32} ${cx+24} ${ch*.36}" stroke="#3a1800" stroke-width="2" fill="none"/>
+      <rect x="${cx-46}" y="${ch*.43}" width="12" height="36" rx="6" fill="#d4956a" opacity=".28"/>
+      <rect x="${cx+34}" y="${ch*.43}" width="12" height="36" rx="6" fill="#d4956a" opacity=".28"/>
+      ${eye(14)}${mouth()}${fade('#0a0e08')}`,
+
+    "Fringe": () => `${bg('#0e0808','#080e08')}
+      ${head(48,ch*.54,'#d4956a')}
+      <ellipse cx="${cx}" cy="${ch*.38}" rx="50" ry="20" fill="#1a0800"/>
+      <rect x="${cx-38}" y="${ch*.40}" width="76" height="18" rx="3.5" fill="#220e00"/>
+      <path d="M${cx-38} ${ch*.50} Q${cx} ${ch*.56} ${cx+38} ${ch*.50}" stroke="#2e1400" stroke-width="2.5" fill="none"/>
+      <rect x="${cx-46}" y="${ch*.43}" width="12" height="38" rx="6" fill="#d4956a" opacity=".28"/>
+      <rect x="${cx+34}" y="${ch*.43}" width="12" height="38" rx="6" fill="#d4956a" opacity=".28"/>
+      ${eye(14)}${mouth()}${fade('#0e0808')}`,
+
+    "Taper fade": () => `${bg('#080810','#100814')}
+      ${head(48,ch*.54,'#d4956a')}
+      <path d="M${cx-44} ${ch*.44} Q${cx-38} ${ch*.22} ${cx} ${ch*.18} Q${cx+38} ${ch*.22} ${cx+44} ${ch*.44} Q${cx+22} ${ch*.34} ${cx} ${ch*.36} Q${cx-22} ${ch*.34} ${cx-44} ${ch*.44}" fill="#0a0a0a"/>
+      <defs><linearGradient id="tf1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a0a0a"/><stop offset="100%" stop-color="#d4956a" stop-opacity="0"/></linearGradient></defs>
+      <rect x="${cx-46}" y="${ch*.42}" width="12" height="42" rx="6" fill="url(#tf1)"/>
+      <rect x="${cx+34}" y="${ch*.42}" width="12" height="42" rx="6" fill="url(#tf1)"/>
+      ${eye(14)}${mouth()}${fade('#080810')}`,
+
+    "Medium messy": () => `${bg('#0e0e08','#08080e')}
+      ${head(48,ch*.52,'#d4956a')}
+      <path d="M${cx-44} ${ch*.46} Q${cx-38} ${ch*.22} ${cx} ${ch*.18} Q${cx+38} ${ch*.22} ${cx+44} ${ch*.46} Q${cx+22} ${ch*.36} ${cx} ${ch*.38} Q${cx-22} ${ch*.36} ${cx-44} ${ch*.46}" fill="#1a1000"/>
+      <path d="M${cx-24} ${ch*.36} Q${cx-12} ${ch*.26} ${cx-2} ${ch*.30}" stroke="#2a1800" stroke-width="3" fill="none"/>
+      <path d="M${cx+2} ${ch*.24} Q${cx+14} ${ch*.20} ${cx+22} ${ch*.28}" stroke="#2a1800" stroke-width="3" fill="none"/>
+      <path d="M${cx-32} ${ch*.42} Q${cx-20} ${ch*.34} ${cx-12} ${ch*.38}" stroke="#2a1800" stroke-width="2.5" fill="none"/>
+      ${eye(14)}${mouth()}${fade('#0e0e08')}`,
+
+    "Side sweep": () => `${bg('#080e18','#0e0e08')}
+      ${head(48,ch*.54,'#d4956a')}
+      <path d="M${cx-44} ${ch*.44} Q${cx-38} ${ch*.24} ${cx} ${ch*.20} Q${cx+38} ${ch*.24} ${cx+44} ${ch*.44} Q${cx+22} ${ch*.34} ${cx} ${ch*.36} Q${cx-22} ${ch*.34} ${cx-44} ${ch*.44}" fill="#0e1e30"/>
+      <path d="M${cx-22} ${ch*.30} Q${cx+4} ${ch*.22} ${cx+28} ${ch*.28} Q${cx+38} ${ch*.32} ${cx+42} ${ch*.40}" stroke="#1a3050" stroke-width="3.5" fill="none"/>
+      <path d="M${cx-18} ${ch*.36} Q${cx+6} ${ch*.28} ${cx+30} ${ch*.34}" stroke="#1a3050" stroke-width="2.5" fill="none" opacity=".6"/>
+      <rect x="${cx-46}" y="${ch*.43}" width="12" height="40" rx="6" fill="#d4956a" opacity=".25"/>
+      <rect x="${cx+34}" y="${ch*.43}" width="12" height="40" rx="6" fill="#d4956a" opacity=".25"/>
+      ${eye(14)}${mouth()}${fade('#080e18')}`,
+
+    "Medium length": () => `${bg('#140a14','#0a140a')}
+      ${head(48,ch*.50,'#d4956a')}
+      <path d="M${cx-44} ${ch*.44} Q${cx-40} ${ch*.24} ${cx} ${ch*.20} Q${cx+40} ${ch*.24} ${cx+44} ${ch*.44} Q${cx+22} ${ch*.34} ${cx} ${ch*.36} Q${cx-22} ${ch*.34} ${cx-44} ${ch*.44}" fill="#1a0a00"/>
+      <path d="M${cx-44} ${ch*.44} L${cx-42} ${ch*.76} Q${cx-38} ${ch*.84} ${cx-32} ${ch*.82} L${cx-32} ${ch*.52}" fill="#220e00" opacity=".7"/>
+      <path d="M${cx+44} ${ch*.44} L${cx+42} ${ch*.76} Q${cx+38} ${ch*.84} ${cx+32} ${ch*.82} L${cx+32} ${ch*.52}" fill="#220e00" opacity=".7"/>
+      ${eye(14)}${mouth()}${fade('#140a14')}`,
+
+    "Curly fringe": () => `${bg('#060606','#0a0808')}
+      ${head(48,ch*.54,'#c8855a')}
+      <circle cx="${cx}" cy="${ch*.34}" r="36" fill="#0a0500"/>
+      ${[-16,-6,4,14].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.30}" r="10" fill="#150800"/>`).join('')}
+      ${[-18,-8,2,12,22].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.44}" r="9" fill="#150800"/>`).join('')}
+      <rect x="${cx-46}" y="${ch*.44}" width="12" height="34" rx="6" fill="#c8855a" opacity=".25"/>
+      <rect x="${cx+34}" y="${ch*.44}" width="12" height="34" rx="6" fill="#c8855a" opacity=".25"/>
+      ${eye(14)}${mouth()}${fade('#060606')}`,
+
+    "Medium curls": () => `${bg('#0a0808','#08100a')}
+      ${head(48,ch*.52,'#d4956a')}
+      <path d="M${cx-44} ${ch*.44} Q${cx-40} ${ch*.22} ${cx} ${ch*.18} Q${cx+40} ${ch*.22} ${cx+44} ${ch*.44} Q${cx+22} ${ch*.34} ${cx} ${ch*.36} Q${cx-22} ${ch*.34} ${cx-44} ${ch*.44}" fill="#1a0a00"/>
+      ${[-20,-6,8,22].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.28}" r="9" fill="#2a1200"/>`).join('')}
+      <path d="M${cx-44} ${ch*.46} L${cx-42} ${ch*.82} Q${cx-38} ${ch*.90} ${cx-30} ${ch*.88} L${cx-28} ${ch*.56}" fill="#1a0a00" opacity=".7"/>
+      <path d="M${cx+44} ${ch*.46} L${cx+42} ${ch*.82} Q${cx+38} ${ch*.90} ${cx+30} ${ch*.88} L${cx+28} ${ch*.56}" fill="#1a0a00" opacity=".7"/>
+      ${eye(14)}${mouth()}${fade('#0a0808')}`,
+
+    "Natural flow": () => `${bg('#0a100e','#100a0e')}
+      ${head(48,ch*.50,'#d4956a')}
+      <path d="M${cx-44} ${ch*.44} Q${cx-40} ${ch*.22} ${cx} ${ch*.18} Q${cx+40} ${ch*.22} ${cx+44} ${ch*.44} Q${cx+22} ${ch*.34} ${cx} ${ch*.36} Q${cx-22} ${ch*.34} ${cx-44} ${ch*.44}" fill="#1a0a00"/>
+      <path d="M${cx-44} ${ch*.46} L${cx-46} ${ch*.86} Q${cx-42} ${ch*.94} ${cx-34} ${ch*.92} L${cx-32} ${ch*.56}" fill="#220e00" opacity=".7"/>
+      <path d="M${cx+44} ${ch*.46} L${cx+46} ${ch*.86} Q${cx+42} ${ch*.94} ${cx+34} ${ch*.92} L${cx+32} ${ch*.56}" fill="#220e00" opacity=".7"/>
+      <path d="M${cx-44} ${ch*.44} Q${cx-54} ${ch*.62} ${cx-50} ${ch*.80}" stroke="#2e1400" stroke-width="2" fill="none" opacity=".5"/>
+      <path d="M${cx+44} ${ch*.44} Q${cx+54} ${ch*.62} ${cx+50} ${ch*.80}" stroke="#2e1400" stroke-width="2" fill="none" opacity=".5"/>
+      ${eye(14)}${mouth()}${fade('#0a100e')}`,
+
+    "Layered messy": () => `${bg('#0a0e14','#140a10')}
+      ${head(48,ch*.52,'#d4956a')}
+      <path d="M${cx-44} ${ch*.44} Q${cx-38} ${ch*.22} ${cx} ${ch*.18} Q${cx+38} ${ch*.22} ${cx+44} ${ch*.44}" fill="#1a1000"/>
+      <path d="M${cx-22} ${ch*.34} Q${cx-10} ${ch*.24} ${cx+2} ${ch*.28}" stroke="#2a1800" stroke-width="2.5" fill="none"/>
+      <path d="M${cx+4} ${ch*.22} Q${cx+16} ${ch*.18} ${cx+26} ${ch*.26}" stroke="#2a1800" stroke-width="2.5" fill="none"/>
+      <path d="M${cx-30} ${ch*.40} Q${cx-18} ${ch*.30} ${cx-8} ${ch*.34}" stroke="#2a1800" stroke-width="2" fill="none"/>
+      <path d="M${cx-44} ${ch*.46} L${cx-46} ${ch*.84} L${cx-32} ${ch*.84} L${cx-30} ${ch*.50}" fill="#1a1000" opacity=".7"/>
+      <path d="M${cx+44} ${ch*.46} L${cx+46} ${ch*.84} L${cx+32} ${ch*.84} L${cx+30} ${ch*.50}" fill="#1a1000" opacity=".7"/>
+      ${eye(14)}${mouth()}${fade('#0a0e14')}`,
+
+    "Volume atas": () => `${bg('#0e0818','#08100e')}
+      ${head(46,ch*.50)}
+      <ellipse cx="${cx}" cy="${ch*.30}" rx="52" ry="26" fill="#3a1a6a"/>
+      <path d="M${cx-50} ${ch*.26} Q${cx-42} ${ch*.10} ${cx} ${ch*.08} Q${cx+42} ${ch*.10} ${cx+50} ${ch*.26}" fill="#4a2a88"/>
+      <path d="M${cx-52} ${ch*.40} Q${cx-62} ${ch*.58} ${cx-60} ${ch} L${cx+60} ${ch} Q${cx+62} ${ch*.58} ${cx+52} ${ch*.40}" fill="#3a1a6a"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Side part": () => `${bg('#0e1020','#1a0e20')}
+      ${head(46,ch*.46)}
+      <path d="M${cx-52} ${ch*.38} Q${cx-64} ${ch*.60} ${cx-60} ${ch} L${cx+60} ${ch} Q${cx+64} ${ch*.60} ${cx+52} ${ch*.38}" fill="#2a1a6c"/>
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="54" ry="22" fill="#1a0a3a"/>
+      <path d="M${cx-10} ${ch*.22} Q${cx+10} ${ch*.32} ${cx+52} ${ch*.36}" stroke="#3a2a8a" stroke-width="3.5" fill="none"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Messy waves": () => `${bg('#0a0e12','#10080c')}
+      ${head(48,ch*.54,'#d4956a')}
+      <path d="M${cx-44} ${ch*.42} Q${cx-52} ${ch*.54} ${cx-44} ${ch*.66} Q${cx-36} ${ch*.78} ${cx-44} ${ch*.90} Q${cx-50} ${ch*.96} ${cx-46} ${ch} L${cx+46} ${ch} Q${cx+50} ${ch*.96} ${cx+44} ${ch*.90} Q${cx+36} ${ch*.78} ${cx+44} ${ch*.66} Q${cx+52} ${ch*.54} ${cx+44} ${ch*.42}" fill="#2a1800"/>
+      <ellipse cx="${cx}" cy="${ch*.34}" rx="48" ry="20" fill="#1a1000"/>
+      <path d="M${cx-20} ${ch*.30} Q${cx-8} ${ch*.26} ${cx+4} ${ch*.30}" stroke="#3a2000" stroke-width="2.5" fill="none"/>
+      <path d="M${cx+6} ${ch*.28} Q${cx+18} ${ch*.24} ${cx+28} ${ch*.28}" stroke="#3a2000" stroke-width="2.5" fill="none"/>
+      ${eye(14)}${mouth()}${fade('#0a0e12')}`,
+
+    "Wavy quiff": () => `${bg('#080e12','#100810')}
+      ${head(48,ch*.54,'#d4956a')}
+      <path d="M${cx-44} ${ch*.44} Q${cx-36} ${ch*.20} ${cx} ${ch*.16} Q${cx+36} ${ch*.20} ${cx+44} ${ch*.44}" fill="#1a0e04"/>
+      <path d="M${cx-28} ${ch*.36} Q${cx-14} ${ch*.22} ${cx+6} ${ch*.24} Q${cx+20} ${ch*.28} ${cx+30} ${ch*.38}" fill="#281600" opacity=".8"/>
+      <path d="M${cx-26} ${ch*.32} Q${cx-10} ${ch*.24} ${cx+10} ${ch*.26} Q${cx+24} ${ch*.30} ${cx+30} ${ch*.38}" stroke="#3a2008" stroke-width="2.5" fill="none" opacity=".7"/>
+      <rect x="${cx-46}" y="${ch*.43}" width="12" height="36" rx="6" fill="#d4956a" opacity=".26"/>
+      <rect x="${cx+34}" y="${ch*.43}" width="12" height="36" rx="6" fill="#d4956a" opacity=".26"/>
+      ${eye(14)}${mouth()}${fade('#080e12')}`,
+
+    "Curly high fade": () => `${bg('#060608','#08060c')}
+      ${head(48,ch*.54,'#c8855a')}
+      <circle cx="${cx}" cy="${ch*.32}" r="34" fill="#0a0500"/>
+      ${[-16,-5,6,17].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.28}" r="11" fill="#150800"/>`).join('')}
+      ${[-20,20].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.38}" r="9" fill="#150800"/>`).join('')}
+      <defs><linearGradient id="chf" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a0500"/><stop offset="100%" stop-color="#c8855a" stop-opacity="0"/></linearGradient></defs>
+      <rect x="${cx-46}" y="${ch*.40}" width="12" height="30" rx="6" fill="url(#chf)"/>
+      <rect x="${cx+34}" y="${ch*.40}" width="12" height="30" rx="6" fill="url(#chf)"/>
+      ${eye(14)}${mouth()}${fade('#060608')}`,
+
+    "Messy hair": () => `${bg('#0a0a08','#080a0a')}
+      ${head(48,ch*.54,'#d4956a')}
+      <path d="M${cx-44} ${ch*.44} Q${cx-38} ${ch*.22} ${cx} ${ch*.18} Q${cx+38} ${ch*.22} ${cx+44} ${ch*.44}" fill="#180e00"/>
+      <path d="M${cx-30} ${ch*.38} Q${cx-18} ${ch*.28} ${cx-6} ${ch*.32}" stroke="#281800" stroke-width="3" fill="none"/>
+      <path d="M${cx-2} ${ch*.24} Q${cx+10} ${ch*.20} ${cx+22} ${ch*.28}" stroke="#281800" stroke-width="3" fill="none"/>
+      <path d="M${cx+20} ${ch*.32} Q${cx+32} ${ch*.26} ${cx+38} ${ch*.36}" stroke="#281800" stroke-width="2.5" fill="none"/>
+      <path d="M${cx-38} ${ch*.42} Q${cx-28} ${ch*.36} ${cx-20} ${ch*.40}" stroke="#281800" stroke-width="2.5" fill="none"/>
+      ${eye(14)}${mouth()}${fade('#0a0a08')}`,
+
+    "Curly short cut": () => `${bg('#060606','#0a0806')}
+      ${head(48,ch*.54,'#c8855a')}
+      <circle cx="${cx}" cy="${ch*.36}" r="30" fill="#0a0500"/>
+      ${[-14,-4,6,16].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.32}" r="10" fill="#150800"/>`).join('')}
+      <rect x="${cx-46}" y="${ch*.44}" width="12" height="34" rx="6" fill="#c8855a" opacity=".24"/>
+      <rect x="${cx+34}" y="${ch*.44}" width="12" height="34" rx="6" fill="#c8855a" opacity=".24"/>
+      ${eye(14)}${mouth()}${fade('#060606')}`,
+
+    "Messy textured": () => `${bg('#080a08','#0a0808')}
+      ${head(48,ch*.54,'#d4956a')}
+      <path d="M${cx-44} ${ch*.44} Q${cx-36} ${ch*.22} ${cx} ${ch*.18} Q${cx+36} ${ch*.22} ${cx+44} ${ch*.44}" fill="#1a1200"/>
+      <path d="M${cx-26} ${ch*.36} Q${cx-14} ${ch*.26} ${cx-2} ${ch*.30}" stroke="#2a1e00" stroke-width="2.5" fill="none"/>
+      <path d="M${cx+2} ${ch*.24} Q${cx+14} ${ch*.20} ${cx+24} ${ch*.26}" stroke="#2a1e00" stroke-width="2.5" fill="none"/>
+      <path d="M${cx-36} ${ch*.42} Q${cx-22} ${ch*.34} ${cx-14} ${ch*.38}" stroke="#2a1e00" stroke-width="2" fill="none"/>
+      <rect x="${cx-46}" y="${ch*.43}" width="12" height="36" rx="6" fill="#d4956a" opacity=".24"/>
+      <rect x="${cx+34}" y="${ch*.43}" width="12" height="36" rx="6" fill="#d4956a" opacity=".24"/>
+      ${eye(14)}${mouth()}${fade('#080a08')}`,
+
+    "Curly medium": () => `${bg('#080606','#060810')}
+      ${head(46,ch*.50)}
+      <path d="M${cx-52} ${ch*.40} Q${cx-62} ${ch*.58} ${cx-58} ${ch} L${cx+58} ${ch} Q${cx+62} ${ch*.58} ${cx+52} ${ch*.40}" fill="#261a6a"/>
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="54" ry="22" fill="#1a1060"/>
+      ${[-24,-10,4,18].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.28}" r="11" fill="#2a1a8a"/>`).join('')}
+      ${eye()}${mouth()}${fade()}`,
+
+    "Shoulder cut": () => `${bg('#0e1428','#140e28')}
+      ${head(46,ch*.44)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="52" ry="20" fill="#1a2a5c"/>
+      <path d="M${cx-52} ${ch*.38} L${cx-50} ${ch*.75} L${cx+50} ${ch*.75} L${cx+52} ${ch*.38}" fill="#223070"/>
+      <rect x="${cx-50}" y="${ch*.72}" width="100" height="7" rx="3" fill="#1a2a5c"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Long straight cut": () => `${bg('#1e1040','#0e2030')}
+      ${head(46,ch*.44)}
+      <path d="M${cx-52} ${ch*.38} Q${cx-64} ${ch*.58} ${cx-62} ${ch} L${cx+62} ${ch} Q${cx+64} ${ch*.58} ${cx+52} ${ch*.38}" fill="#2a1a7a"/>
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="54" ry="20" fill="#1a0a4a"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Loose curls": () => `${bg('#0e101a','#1a0e10')}
+      ${head(46,ch*.48)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="54" ry="22" fill="#3a1a2a"/>
+      <path d="M${cx-52} ${ch*.38} Q${cx-62} ${ch*.56} ${cx-60} ${ch} L${cx+60} ${ch} Q${cx+62} ${ch*.56} ${cx+52} ${ch*.38}" fill="#4a2238"/>
+      ${[-32,-16,0,16,32].map((dx,i)=>`<circle cx="${cx+dx}" cy="${ch*.72+i%2*12}" r="12" fill="#582a45" opacity=".8"/>`).join('')}
+      ${eye()}${mouth()}${fade()}`,
+
+    "Layer ringan": () => `${bg('#0e1820','#1a0e18')}
+      ${head(46,ch*.46)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="52" ry="20" fill="#1a3048"/>
+      <path d="M${cx-50} ${ch*.38} Q${cx-60} ${ch*.58} ${cx-58} ${ch*.88} L${cx+58} ${ch*.88} Q${cx+60} ${ch*.58} ${cx+50} ${ch*.38}" fill="#203860"/>
+      <path d="M${cx-54} ${ch*.42} Q${cx-62} ${ch*.62} ${cx-60} ${ch*.90}" stroke="#2e4a78" stroke-width="2.5" fill="none" opacity=".55"/>
+      <path d="M${cx+54} ${ch*.42} Q${cx+62} ${ch*.62} ${cx+60} ${ch*.90}" stroke="#2e4a78" stroke-width="2.5" fill="none" opacity=".55"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Volume bawah": () => `${bg('#0e1a10','#1a0e1a')}
+      ${head(46,ch*.46)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="52" ry="20" fill="#1a3028"/>
+      <path d="M${cx-50} ${ch*.38} Q${cx-56} ${ch*.52} ${cx-54} ${ch*.68} Q${cx-50} ${ch*.84} ${cx-58} ${ch} L${cx+58} ${ch} Q${cx+50} ${ch*.84} ${cx+54} ${ch*.68} Q${cx+56} ${ch*.52} ${cx+50} ${ch*.38}" fill="#1e4038"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Soft wave bob": () => `${bg('#0e1420','#200e14')}
+      ${head(46,ch*.44)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="54" ry="20" fill="#1a2850"/>
+      <path d="M${cx-52} ${ch*.38} Q${cx-60} ${ch*.50} ${cx-52} ${ch*.62} Q${cx-44} ${ch*.74} ${cx-52} ${ch*.82} L${cx+52} ${ch*.82} Q${cx+44} ${ch*.74} ${cx+52} ${ch*.62} Q${cx+60} ${ch*.50} ${cx+52} ${ch*.38}" fill="#203070"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Curly panjang": () => `${bg('#100806','#061014')}
+      ${head(46,ch*.46,'#c8855a')}
+      <circle cx="${cx}" cy="${ch*.30}" r="40" fill="#1a0800"/>
+      ${[-20,-8,4,16].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.26}" r="12" fill="#260e00"/>`).join('')}
+      <path d="M${cx-54} ${ch*.44} Q${cx-68} ${ch*.62} ${cx-64} ${ch} L${cx+64} ${ch} Q${cx+68} ${ch*.62} ${cx+54} ${ch*.44}" fill="#1a0800"/>
+      ${[-40,40].map(dx=>[0,.15,.30,.45].map(off=>`<circle cx="${cx+dx}" cy="${ch*(0.52+off)}" r="10" fill="#220e00" opacity=".9"/>`).join('')).join('')}
+      ${eye()}${mouth()}${fade()}`,
+
+    "Curly layer": () => `${bg('#0e100a','#0a0e14')}
+      ${head(46,ch*.48,'#c8855a')}
+      <circle cx="${cx}" cy="${ch*.30}" r="38" fill="#1a0a00"/>
+      ${[-18,-6,6,18].map(dx=>`<circle cx="${cx+dx}" cy="${ch*.26}" r="11" fill="#2a1200"/>`).join('')}
+      <path d="M${cx-52} ${ch*.40} Q${cx-64} ${ch*.58} ${cx-60} ${ch} L${cx+60} ${ch} Q${cx+64} ${ch*.58} ${cx+52} ${ch*.40}" fill="#1a0a00"/>
+      ${[-36,36].map(dx=>[0,.18].map(off=>`<circle cx="${cx+dx}" cy="${ch*(0.52+off)}" r="10" fill="#220e00" opacity=".85"/>`).join('')).join('')}
+      ${eye()}${mouth()}${fade()}`,
+
+    "Loose waves": () => `${bg('#0a1428','#280a14')}
+      ${head(46,ch*.46)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="52" ry="20" fill="#1a305c"/>
+      <path d="M${cx-50} ${ch*.38} Q${cx-58} ${ch*.50} ${cx-50} ${ch*.62} Q${cx-42} ${ch*.74} ${cx-50} ${ch*.86} L${cx+50} ${ch*.86} Q${cx+42} ${ch*.74} ${cx+50} ${ch*.62} Q${cx+58} ${ch*.50} ${cx+50} ${ch*.38}" fill="#203878"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Volume samping": () => `${bg('#100e1a','#1a0e10')}
+      ${head(46,ch*.46)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="54" ry="20" fill="#201840"/>
+      <path d="M${cx-52} ${ch*.38} Q${cx-72} ${ch*.54} ${cx-70} ${ch*.82} L${cx+70} ${ch*.82} Q${cx+72} ${ch*.54} ${cx+52} ${ch*.38}" fill="#2a2050"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Poni tipis": () => `${bg('#0e1428','#281418')}
+      ${head(46,ch*.46)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="52" ry="20" fill="#1a2a5c"/>
+      <path d="M${cx-52} ${ch*.38} Q${cx-62} ${ch*.58} ${cx-60} ${ch} L${cx+60} ${ch} Q${cx+62} ${ch*.58} ${cx+52} ${ch*.38}" fill="#203070"/>
+      <rect x="${cx-30}" y="${ch*.36}" width="60" height="12" rx="3" fill="#2a3a80" opacity=".8"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Long straight": () => `${bg('#1e1040','#0e2030')}
+      ${head(46,ch*.44)}
+      <path d="M${cx-52} ${ch*.38} Q${cx-62} ${ch*.56} ${cx-60} ${ch} L${cx+60} ${ch} Q${cx+62} ${ch*.56} ${cx+52} ${ch*.38}" fill="#1a0a3a"/>
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="54" ry="20" fill="#1a0a4a"/>
+      ${eye()}${mouth()}${fade()}`,
+
+    "Textured waves": () => `${bg('#0e1420','#200e1a')}
+      ${head(46,ch*.46)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="52" ry="20" fill="#1a283c"/>
+      <path d="M${cx-50} ${ch*.38} Q${cx-58} ${ch*.52} ${cx-50} ${ch*.64} Q${cx-42} ${ch*.76} ${cx-50} ${ch*.88} L${cx+50} ${ch*.88} Q${cx+42} ${ch*.76} ${cx+50} ${ch*.64} Q${cx+58} ${ch*.52} ${cx+50} ${ch*.38}" fill="#20344c"/>
+      ${[-26,26].map(dx=>`<path d="M${cx+dx} ${ch*.52} Q${cx+dx*1.3} ${ch*.60} ${cx+dx} ${ch*.68}" stroke="#2e4a60" stroke-width="2.5" fill="none"/>`).join('')}
+      ${eye()}${mouth()}${fade()}`,
+
+    "Medium cut": () => `${bg('#0e1428','#28140e')}
+      ${head(46,ch*.44)}
+      <ellipse cx="${cx}" cy="${ch*.32}" rx="52" ry="20" fill="#1a2050"/>
+      <path d="M${cx-52} ${ch*.38} L${cx-50} ${ch*.72} L${cx+50} ${ch*.72} L${cx+52} ${ch*.38}" fill="#202860"/>
+      <rect x="${cx-50}" y="${ch*.70}" width="100" height="7" rx="3" fill="#1a2050"/>
+      ${eye()}${mouth()}${fade()}`,
+  };
+
+  const fn = styles[name];
+  const inner = fn ? fn() : `
+    <rect width="${W}" height="${H}" fill="#1a1a2e"/>
+    ${head(46,H*.46)}
+    <ellipse cx="${cx}" cy="${H*.32}" rx="52" ry="20" fill="#2a2a4a"/>
+    ${eye()}${mouth()}${fade()}
+    <text x="${cx}" y="${H*.88}" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="13" font-family="sans-serif">${name}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+}
+
+// ══════════════════════════════════════════════
+// RECOMMENDATION DATA
+// ══════════════════════════════════════════════
+const rekoData = {
+  // Female
+  "Long layer":    {b:"💇‍♀️ Wanita",r:["Menambah dimensi dan gerakan pada rambut lurus","Membingkai wajah secara natural tanpa memperlebarnya","Cocok untuk hampir semua bentuk wajah"],t:"✨ Minta stylist layer mulai dari tulang pipi ke bawah agar hasilnya natural."},
+  "Bob sebahu":    {b:"💇‍♀️ Wanita",r:["Panjang sebahu menyeimbangkan proporsi wajah","Memberi kesan rahang lebih terdefinisi","Mudah diatur dan terlihat rapi"],t:"✨ Tambahkan sedikit curl di ujung untuk tampilan lebih feminin."},
+  "Curtain bangs": {b:"💇‍♀️ Wanita",r:["Poni terbelah di tengah melembutkan dahi yang lebar","Membingkai mata dan wajah secara simetris","Tren sepanjang masa yang flattering"],t:"✨ Blow dry ke arah luar menggunakan round brush untuk curtain yang sempurna."},
+  "Beach waves":   {b:"💇‍♀️ Wanita",r:["Gelombang lepas memberi volume tanpa mempertegas lebar wajah","Tampilan kasual tapi tetap stylish","Cocok untuk rambut bergelombang alami"],t:"✨ Semprotkan sea salt spray dan remas rambut saat masih basah."},
+  "Layer panjang": {b:"💇‍♀️ Wanita",r:["Layer di bagian bawah menambah volume dan pergerakan","Memanjangkan visual wajah bulat","Fleksibel untuk berbagai gaya"],t:"✨ Minta layer ringan di bagian bawah saja."},
+  "Soft wave bob": {b:"💇‍♀️ Wanita",r:["Kombinasi bob dan gelombang memberi kesan wajah lebih oval","Volume di samping menyeimbangkan wajah panjang","Tampilan modern dan mudah diatur"],t:"✨ Gunakan curling wand 32mm untuk gelombang yang besar dan lembut."},
+  "Curly layer":   {b:"💇‍♀️ Wanita",r:["Layer pada rambut keriting mengurangi berat dan menambah bouncy","Membingkai wajah tanpa membuatnya lebih lebar","Memperlihatkan tekstur alami rambut keriting"],t:"✨ Gunakan teknik Curly Girl Method untuk menjaga definisi curl."},
+  "Shoulder cut":  {b:"💇‍♀️ Wanita",r:["Panjang sebahu memberi keseimbangan pada wajah oval","Tidak terlalu panjang sehingga tidak menarik wajah ke bawah","Serbaguna untuk berbagai gaya"],t:"✨ Trim di ujung setiap 6–8 minggu agar tetap rapi."},
+  "Natural curls": {b:"💇‍♀️ Wanita",r:["Curl alami menambah karakter dan kepribadian","Volume di sekitar wajah membingkai bentuk wajah secara natural","Minim perawatan sehari-hari"],t:"✨ Aplikasikan leave-in conditioner saat rambut masih basah."},
+  "Side part":     {b:"💇‍♀️ Wanita",r:["Belahan samping menciptakan asimetri yang memperramping wajah","Memberi ilusi wajah lebih panjang dan oval","Klasik dan selalu cocok"],t:"✨ Coba belahan di sisi yang berlawanan dari kebiasaan."},
+  "Long straight cut":{b:"💇‍♀️ Wanita",r:["Rambut panjang lurus menciptakan garis vertikal memanjangkan wajah","Menyeimbangkan lebar wajah bulat","Tampilan bersih dan mudah dirawat"],t:"✨ Gunakan wide-tooth comb agar rambut tidak patah."},
+  "Wavy panjang":  {b:"💇‍♀️ Wanita",r:["Gelombang panjang memberi gerakan vertikal memanjangkan wajah","Menambah volume tanpa mempertegas lebar","Tampilan romantis dan feminin"],t:"✨ Tidur dengan rambut dikepang longgar untuk waves alami."},
+  "Volume atas":   {b:"💇‍♀️ Wanita",r:["Volume di bagian crown menciptakan ilusi wajah lebih panjang","Mengalihkan perhatian dari lebar wajah ke bagian atas","Cocok untuk wajah bulat"],t:"✨ Gunakan round brush saat blow dry di bagian roots untuk volume maksimal."},
+  "Loose waves":   {b:"💇‍♀️ Wanita",r:["Gelombang lepas dan natural terlihat effortless","Menambah tekstur tanpa struktur kaku","Cocok untuk rambut bergelombang alami"],t:"✨ Diffuser saat blow dry membantu mendapat loose waves yang natural."},
+  "Soft layer":    {b:"💇‍♀️ Wanita",r:["Layer ringan melembutkan sudut-sudut tegas rahang square","Menambah gerakan tanpa menghilangkan volume","Transisi halus antar panjang rambut"],t:"✨ Minta face-framing layers untuk melembutkan garis rahang."},
+  "Poni tipis":    {b:"💇‍♀️ Wanita",r:["Poni tipis dan ringan melunakkan dahi yang lebar","Tidak memberi kesan berat di wajah","Mudah di-styling ke berbagai arah"],t:"✨ Potong poni saat rambut kering agar lebih presisi."},
+  "Long straight": {b:"💇‍♀️ Wanita",r:["Garis lurus panjang mengimbangi lebar rahang yang tegas","Menciptakan visual memanjang pada wajah","Tampilan bersih dan modern"],t:"✨ Trim ujung rutin untuk menghindari rambut bercabang."},
+  "Wavy medium":   {b:"💇‍♀️ Wanita",r:["Panjang medium dengan gelombang sangat versatile","Menyeimbangkan proporsi wajah secara keseluruhan","Mudah diatur untuk tampilan kasual maupun formal"],t:"✨ Panjang ideal adalah tepat di bawah dagu hingga bahu."},
+  "Textured waves":{b:"💇‍♀️ Wanita",r:["Tekstur menambah dimensi dan mengurangi kesan kaku","Gerakan gelombang melunakkan garis rahang","Tampilan modern dan edgy"],t:"✨ Texturizing spray membantu menciptakan efek ini dengan mudah."},
+  "Loose curls":   {b:"💇‍♀️ Wanita",r:["Curl longgar melembutkan sudut-sudut tegas wajah square","Volume di samping menyeimbangkan lebar rahang","Tampilan romantis dan playful"],t:"✨ Biarkan curl mendingin sebelum diurai agar lebih tahan lama."},
+  "Layer ringan":  {b:"💇‍♀️ Wanita",r:["Layer ringan memberi gerakan tanpa mengurangi volume signifikan","Melembutkan sudut-sudut wajah","Cocok untuk berbagai tekstur rambut"],t:"✨ Komunikasikan ke stylist menggunakan foto referensi."},
+  "Curly bob":     {b:"💇‍♀️ Wanita",r:["Kombinasi bob dan curl menciptakan volume yang terarah","Panjang bob mempertegas rahang secara positif","Tampilan bold dan percaya diri"],t:"✨ Diffuse dari bawah ke atas untuk curl yang lebih voluminous."},
+  "Poni depan":    {b:"💇‍♀️ Wanita",r:["Poni lurus memotong panjang visual wajah oblong","Menciptakan ilusi wajah lebih pendek dan seimbang","Mengalihkan fokus ke mata"],t:"✨ Poni blunt cut memberikan efek pemendekan terbaik untuk wajah oblong."},
+  "Medium cut":    {b:"💇‍♀️ Wanita",r:["Panjang medium tidak menarik wajah oblong semakin panjang","Memberikan keseimbangan antara panjang dan proporsi","Sangat versatile untuk berbagai gaya"],t:"✨ Hindari rambut terlalu panjang agar wajah tidak terlihat terlalu memanjang."},
+  "Blunt bob":     {b:"💇‍♀️ Wanita",r:["Potongan blunt yang rata menciptakan lebar visual di wajah","Menyeimbangkan wajah oblong yang panjang","Tampilan sharp dan modern"],t:"✨ Bob sepanjang dagu adalah panjang ideal untuk wajah oblong."},
+  "Wavy bob":      {b:"💇‍♀️ Wanita",r:["Gelombang di bob menambah volume di samping","Menyeimbangkan wajah oblong secara horizontal","Tampilan playful namun tetap chic"],t:"✨ Volume di samping adalah kuncinya — hindari volume di atas kepala."},
+  "Curly medium":  {b:"💇‍♀️ Wanita",r:["Panjang medium dengan curl menciptakan volume di samping","Menyeimbangkan panjang wajah","Tekstur curl menambah lebar visual"],t:"✨ Panjang medium sebahu ke bawah adalah sweet spot."},
+  "Poni samping":  {b:"💇‍♀️ Wanita",r:["Poni miring menciptakan garis diagonal melembutkan dahi lebar","Menyeimbangkan wajah heart shape","Tampilan anggun dan feminin"],t:"✨ Sisir poni ke arah yang berlawanan dari belahan rambut."},
+  "Long bob":      {b:"💇‍♀️ Wanita",r:["Lob menambah volume di bagian dagu yang sempit","Menyeimbangkan wajah heart yang lebar di atas","Tampilan modern yang sangat populer"],t:"✨ Tambahkan sedikit wave di ujung untuk volume ekstra di area rahang."},
+  "Volume bawah":  {b:"💇‍♀️ Wanita",r:["Volume di bagian bawah rambut menyeimbangkan dahi lebar heart shape","Menciptakan ilusi rahang yang lebih lebar","Sangat efektif untuk rambut bergelombang"],t:"✨ Curl bagian bawah rambut ke arah luar untuk volume maksimal di area rahang."},
+  "Curly panjang": {b:"💇‍♀️ Wanita",r:["Curl panjang menambah volume dan karakter","Membingkai wajah secara natural","Tampilan dramatis dan percaya diri"],t:"✨ Rutin deep conditioning untuk menjaga curl tetap sehat dan defined."},
+  "Soft wave bob": {b:"💇‍♀️ Wanita",r:["Kombinasi bob dan gelombang memberi kesan wajah lebih oval","Volume di samping menyeimbangkan wajah panjang","Tampilan modern dan mudah diatur"],t:"✨ Gunakan curling wand 32mm untuk gelombang besar dan lembut."},
+  "Loose waves":   {b:"💇‍♀️ Wanita",r:["Gelombang lepas dan natural terlihat effortless","Menambah tekstur tanpa struktur kaku","Cocok untuk rambut bergelombang alami"],t:"✨ Diffuser saat blow dry untuk loose waves yang natural."},
+  "Shoulder cut":  {b:"💇‍♀️ Wanita",r:["Panjang sebahu memberi keseimbangan pada wajah oval","Tidak terlalu panjang sehingga tidak menarik wajah ke bawah","Serbaguna untuk berbagai gaya"],t:"✨ Trim di ujung setiap 6–8 minggu agar tetap rapi."},
+  // Male
+  "Side part":       {b:"💇‍♂️ Pria",r:["Belahan samping yang rapi menciptakan tampilan klasik dan profesional","Asimetri alami memperramping wajah","Cocok untuk hampir semua bentuk wajah pria"],t:"✨ Gunakan pomade untuk hasil side part yang tahan lama dan glossy."},
+  "Pompadour":       {b:"💇‍♂️ Pria",r:["Volume tinggi di bagian depan memanjangkan wajah secara visual","Menciptakan focal point di atas kepala","Tampilan maskulin dan percaya diri"],t:"✨ Blow dry ke atas dan ke belakang menggunakan round brush."},
+  "Slick back":      {b:"💇‍♂️ Pria",r:["Rambut disisir ke belakang memperlihatkan struktur wajah","Tampilan clean dan sophisticated","Cocok untuk acara formal maupun kasual"],t:"✨ Pomade water-based untuk hasil sleek yang tidak kaku."},
+  "Textured quiff":  {b:"💇‍♂️ Pria",r:["Quiff bertekstur menambah volume di bagian depan","Lebih modern dibanding pompadour klasik","Volume ke atas memanjangkan visual wajah"],t:"✨ Gunakan clay atau wax untuk tekstur yang natural dan matte."},
+  "Messy waves":     {b:"💇‍♂️ Pria",r:["Tampilan messy yang disengaja terlihat effortless dan modern","Gelombang alami menambah karakter","Cocok untuk rambut bergelombang natural"],t:"✨ Sea salt spray menghasilkan messy waves yang natural."},
+  "Side sweep":      {b:"💇‍♂️ Pria",r:["Sapuan ke samping menciptakan gerakan horizontal","Menyeimbangkan panjang vertikal wajah","Tampilan klasik yang selalu stylish"],t:"✨ Light hold pomade untuk side sweep yang natural."},
+  "Curly top fade":  {b:"💇‍♂️ Pria",r:["Fade di samping membuat curls di atas lebih menonjol","Kontras antara bagian pendek dan panjang menciptakan struktur","Cocok untuk rambut keriting natural"],t:"✨ Minta high fade untuk kontras yang lebih dramatis."},
+  "Natural flow":    {b:"💇‍♂️ Pria",r:["Rambut yang dibiarkan natural mengikuti kontur kepala","Melembutkan dahi yang lebar","Tampilan yang relaxed dan autentik"],t:"✨ Regular trim setiap 6–8 minggu memastikan tetap terlihat rapi."},
+  "Medium curls":    {b:"💇‍♂️ Pria",r:["Panjang medium memungkinkan curl berkembang sempurna","Menyeimbangkan dahi lebar heart shape","Tampilan yang sangat natural dan autentik"],t:"✨ Plopping method setelah keramas untuk curl yang lebih defined."},
+  "Undercut":        {b:"💇‍♂️ Pria",r:["Undercut mengurangi volume di samping yang mempertegas lebar wajah","Volume di atas menciptakan ilusi wajah lebih panjang","Tampilan edgy dan modern"],t:"✨ Kombinasikan dengan skin fade untuk hasil yang lebih clean."},
+  "High fade":       {b:"💇‍♂️ Pria",r:["Fade tinggi mengurangi lebar visual di bagian samping kepala","Membuat wajah terlihat lebih panjang dan oval","Low maintenance dan selalu terlihat rapi"],t:"✨ Touch up setiap 2–3 minggu agar selalu terlihat sharp."},
+  "Crew cut":        {b:"💇‍♂️ Pria",r:["Potongan pendek rapi yang timeless","Tidak menambah volume yang tidak perlu","Menonjolkan struktur tulang wajah yang tegas"],t:"✨ Crew cut dengan skin fade di samping terlihat sangat maskulin."},
+  "Messy textured":  {b:"💇‍♂️ Pria",r:["Tekstur acak-acakan menciptakan volume yang tidak terstruktur","Mengurangi kesan terlalu formal atau kaku","Cocok untuk gaya kasual sehari-hari"],t:"✨ Texturizing paste pada rambut setengah kering untuk hasil terbaik."},
+  "Wavy quiff":      {b:"💇‍♂️ Pria",r:["Quiff dengan gelombang natural lebih effortless","Volume ke atas memanjangkan wajah bulat","Tampilan modern yang versatile"],t:"✨ Medium-hold product agar gelombang tetap terlihat natural."},
+  "Curly high fade": {b:"💇‍♂️ Pria",r:["High fade meminimalkan lebar di samping kepala","Curls di bagian atas menciptakan volume vertikal","Sangat cocok untuk wajah bulat"],t:"✨ Biarkan curls tumbuh cukup panjang di atas sebelum minta high fade."},
+  "Textured crop":   {b:"💇‍♂️ Pria",r:["Potongan crop bertekstur melembutkan garis rahang tegas","Fringe pendek di depan melunakkan dahi","Tampilan modern dan populer"],t:"✨ Minta French crop untuk fringe yang rata dan clean."},
+  "Messy hair":      {b:"💇‍♂️ Pria",r:["Tampilan messy melembutkan kesan kaku dari wajah square","Tidak mempertegas sudut wajah","Gaya yang sangat mudah dan santai"],t:"✨ Clay atau wax memberikan tampilan messy yang terkontrol."},
+  "Curly short cut": {b:"💇‍♂️ Pria",r:["Potongan pendek dengan curl alami terlihat rapi sekaligus natural","Tidak menambah lebar wajah yang sudah square","Mudah dirawat"],t:"✨ Curl cream untuk menjaga definisi curl tetap terlihat."},
+  "Taper fade":      {b:"💇‍♂️ Pria",r:["Taper fade lebih halus, cocok melembutkan wajah square","Transisi gradual terlihat natural","Bisa dikombinasikan dengan banyak gaya"],t:"✨ Taper fade + textured top adalah kombinasi paling versatile."},
+  "Fringe":          {b:"💇‍♂️ Pria",r:["Fringe memotong panjang visual wajah oblong","Mengalihkan perhatian ke mata","Tampilan yang sedikit lebih playful"],t:"✨ Fringe bertekstur lebih modern dibanding blunt fringe."},
+  "Medium messy":    {b:"💇‍♂️ Pria",r:["Panjang medium yang messy menyeimbangkan wajah oblong","Tidak terlalu pendek yang mempertegas panjang wajah","Tampilan kasual yang cocok sehari-hari"],t:"✨ Panjang ideal sekitar 3–5 cm untuk gaya messy."},
+  "Medium length":   {b:"💇‍♂️ Pria",r:["Panjang medium menyeimbangkan dahi lebar heart shape","Tidak terlalu pendek yang mempertegas lebar dahi","Sangat versatile untuk berbagai gaya"],t:"✨ Panjang medium sekitar telinga hingga rahang paling flattering."},
+  "Layered messy":   {b:"💇‍♂️ Pria",r:["Layer pada rambut bergelombang mengurangi berat dan menambah gerakan","Tampilan messy melembutkan dahi lebar","Modern dan sangat populer"],t:"✨ Texturizing spray pada rambut kering untuk hasil yang lebih defined."},
+  "Curly fringe":    {b:"💇‍♂️ Pria",r:["Fringe keriting menutupi sebagian dahi yang lebar","Curl alami menambah karakter dan personalitas","Cocok untuk rambut keriting yang ingin tampil beda"],t:"✨ Stretch curl sedikit ke depan untuk fringe yang lebih defined."},
+  "Volume atas":     {b:"💇‍♂️ Pria",r:["Volume di atas menciptakan ilusi wajah lebih panjang","Mengalihkan perhatian dari lebar wajah ke bagian atas","Cocok untuk wajah bulat"],t:"✨ Round brush saat blow dry di bagian roots untuk volume maksimal."},
+};
+
+// ══════════════════════════════════════════════
+// INIT: Render SVGs + animate cards
+// ══════════════════════════════════════════════
+document.querySelectorAll('.rekom-card').forEach((card, i) => {
+  // Ambil nama dari teks .rekom-name
+  const name = card.querySelector('.rekom-name').textContent.trim();
+  // Render SVG di card
+  const svgEl = card.querySelector('.rekom-svg');
+  svgEl.innerHTML = makeSVG(name, svgEl.offsetWidth || 300, 150);
+
+  // Animate in with delay
+  setTimeout(() => card.classList.add('visible'), 200 + i * 180);
+});
+
+// Render measurements
+const measurementsEl = document.getElementById('measurements');
+if (measurementsEl) {
+  const shapes = {
+    'Oval':   {h:75,c:80,j:70,t:72},
+    'Round':  {h:55,c:90,j:80,t:75},
+    'Square': {h:60,c:80,j:85,t:85},
+    'Oblong': {h:90,c:60,j:55,t:60},
+    'Heart':  {h:65,c:80,j:50,t:85},
+  };
+  const faceShape = "{{ face_shape }}";
+  const vals = shapes[faceShape] || {h:65,c:70,j:65,t:68};
+  const bars = [
+    {label:'Tinggi', val:vals.h, color:'linear-gradient(90deg,#c8a8ff,#ff8ec4)'},
+    {label:'Lebar Pipi', val:vals.c, color:'linear-gradient(90deg,#8ecfff,#c8a8ff)'},
+    {label:'Rahang', val:vals.j, color:'linear-gradient(90deg,#ff8ec4,#ffb86c)'},
+    {label:'Pelipis', val:vals.t, color:'linear-gradient(90deg,#8ecfff,#6cffa8)'},
+  ];
+  measurementsEl.innerHTML = bars.map(b=>`
+    <div class="mbar-row">
+      <div class="mbar-label">${b.label}</div>
+      <div class="mbar-track"><div class="mbar-fill" style="width:${b.val}%;background:${b.color};animation-delay:.3s"></div></div>
+      <div class="mbar-val">${b.val}%</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════
+const numLabels = ['Pilihan Pertama','Pilihan Kedua','Pilihan Ketiga'];
+const numColors = ['var(--accent)','var(--accent2)','var(--accent3)'];
+
+function openModal(name, idx) {
+  const data = rekoData[name] || {
+    b:'✂️ Gaya Rambut',
+    r:[`Cocok untuk bentuk wajah {{ face_shape }}`,`Direkomendasikan untuk jenis rambut {{ hair_type }}`, 'Pilihan populer dari stylist profesional'],
+    t:'✨ Konsultasikan dengan stylist kepercayaan kamu untuk hasil terbaik!'
+  };
+
+  document.getElementById('modalNum').textContent = numLabels[idx-1] || `Pilihan ${idx}`;
+  document.getElementById('modalNum').style.color = numColors[idx-1] || 'var(--accent)';
+  document.getElementById('modalName').textContent = name;
+  document.getElementById('modalBadge').textContent = data.b;
+
+  const ul = document.getElementById('modalReasons');
+  ul.innerHTML = data.r.map((r,i)=>`
+    <li>
+      <div class="reason-dot">${i+1}</div>
+      <span>${r}</span>
+    </li>`).join('');
+
+  document.getElementById('modalTip').textContent = data.t;
+
+  // SVG in modal (bigger)
+  document.getElementById('modalSvg').innerHTML = makeSVG(name, 480, 200);
+
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('overlay'))
+    document.getElementById('overlay').classList.remove('open');
+}
+function closeModalDirect() {
+  document.getElementById('overlay').classList.remove('open');
+}
+</script>
+</body>
+</html>

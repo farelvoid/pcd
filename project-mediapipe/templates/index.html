@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HairStyle AI — Analisis Wajah</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0d0d14;
+  --surface: #13131f;
+  --card: #1c1c2e;
+  --border: rgba(255,255,255,0.07);
+  --accent: #c8a8ff;
+  --accent2: #ff8ec4;
+  --accent3: #8ecfff;
+  --text: #e8e8f0;
+  --muted: rgba(232,232,240,0.45);
+  --glow: 0 0 60px rgba(200,168,255,0.15);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--ink);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:40px 16px;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* ── Background orbs ── */
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+.orb1{width:500px;height:500px;background:radial-gradient(circle,#4a1e8a55,transparent 70%);top:-120px;left:-120px}
+.orb2{width:400px;height:400px;background:radial-gradient(circle,#8a1e5555,transparent 70%);bottom:-80px;right:-80px}
+.orb3{width:300px;height:300px;background:radial-gradient(circle,#1e4a8a33,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%)}
+
+/* ── Main container ── */
+.shell{
+  position:relative;z-index:1;
+  width:100%;max-width:480px;
+}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:44px}
+.logo{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:'Syne',sans-serif;font-size:28px;font-weight:800;
+  letter-spacing:-0.5px;margin-bottom:8px;
+}
+.logo-icon{
+  width:40px;height:40px;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  box-shadow:0 4px 20px rgba(200,168,255,0.4);
+}
+.tagline{color:var(--muted);font-size:14px;font-weight:300;letter-spacing:0.3px}
+
+/* ── Card ── */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:28px;
+  padding:36px;
+  box-shadow:var(--glow),0 40px 80px rgba(0,0,0,0.4);
+  backdrop-filter:blur(20px);
+}
+
+/* ── Upload zone ── */
+.upload-zone{
+  border:1.5px dashed rgba(200,168,255,0.3);
+  border-radius:20px;
+  padding:32px 20px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .25s;
+  position:relative;
+  overflow:hidden;
+  margin-bottom:28px;
+  background:rgba(200,168,255,0.03);
+}
+.upload-zone:hover,.upload-zone.drag{
+  border-color:var(--accent);
+  background:rgba(200,168,255,0.07);
+}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-icon{font-size:36px;margin-bottom:10px;display:block;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.upload-label{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:4px}
+.upload-hint{font-size:12px;color:var(--muted)}
+.upload-preview{
+  display:none;position:relative;
+  width:100%;max-height:200px;object-fit:cover;
+  border-radius:14px;margin-bottom:8px;
+}
+.upload-name{font-size:12px;color:var(--accent);font-weight:500}
+
+/* ── Form fields ── */
+.fields{display:flex;flex-direction:column;gap:18px}
+
+.field-label{
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);
+  margin-bottom:10px;display:block;
+}
+
+/* Toggle pills */
+.pill-group{display:flex;gap:8px;flex-wrap:wrap}
+.pill{
+  flex:1;min-width:80px;padding:11px 16px;border-radius:50px;
+  border:1.5px solid var(--border);background:transparent;
+  color:var(--muted);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;
+  cursor:pointer;transition:all .2s;text-align:center;
+  position:relative;overflow:hidden;
+}
+.pill::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  opacity:0;transition:opacity .2s;
+}
+.pill span{position:relative;z-index:1}
+.pill.active{
+  border-color:var(--accent);color:var(--text);
+  box-shadow:0 0 20px rgba(200,168,255,0.25);
+}
+.pill.active::before{opacity:0.15}
+
+/* Hijab section - animated reveal */
+.hijab-wrap{
+  max-height:0;overflow:hidden;
+  transition:max-height .4s cubic-bezier(.4,0,.2,1), opacity .3s;
+  opacity:0;
+}
+.hijab-wrap.show{max-height:120px;opacity:1}
+
+/* ── Submit button ── */
+.btn-analyze{
+  width:100%;padding:16px;border-radius:50px;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:var(--ink);font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  letter-spacing:0.5px;cursor:pointer;margin-top:8px;
+  transition:all .25s;
+  box-shadow:0 8px 30px rgba(200,168,255,0.35);
+  position:relative;overflow:hidden;
+}
+.btn-analyze:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(200,168,255,0.45)}
+.btn-analyze:active{transform:translateY(0)}
+.btn-analyze:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+
+/* ── Scan overlay ── */
+.scan-overlay{
+  display:none;position:fixed;inset:0;z-index:999;
+  background:rgba(13,13,20,0.92);backdrop-filter:blur(12px);
+  flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+.scan-overlay.active{display:flex}
+.scan-box{
+  width:260px;height:260px;border-radius:24px;position:relative;
+  border:2px solid rgba(200,168,255,0.2);overflow:hidden;
+  background:rgba(200,168,255,0.03);
+}
+.scan-img{width:100%;height:100%;object-fit:cover;opacity:0.7}
+/* Corner brackets */
+.scan-box::before,.scan-box::after{
+  content:'';position:absolute;width:24px;height:24px;z-index:2;
+  border-color:var(--accent);border-style:solid;
+}
+.scan-box::before{top:10px;left:10px;border-width:3px 0 0 3px;border-radius:6px 0 0 0}
+.scan-box::after{bottom:10px;right:10px;border-width:0 3px 3px 0;border-radius:0 0 6px 0}
+.corner-tr,.corner-bl{
+  position:absolute;width:24px;height:24px;z-index:2;
+  border-color:var(--accent2);border-style:solid;
+}
+.corner-tr{top:10px;right:10px;border-width:3px 3px 0 0;border-radius:0 6px 0 0}
+.corner-bl{bottom:10px;left:10px;border-width:0 0 3px 3px;border-radius:0 0 0 6px}
+
+/* Scan line */
+.scan-line{
+  position:absolute;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent);
+  box-shadow:0 0 12px var(--accent);
+  animation:scanMove 1.8s ease-in-out infinite;
+  z-index:3;
+}
+@keyframes scanMove{
+  0%{top:0;opacity:0}
+  10%{opacity:1}
+  90%{opacity:1}
+  100%{top:100%;opacity:0}
+}
+/* Scan particles */
+.scan-dots{position:absolute;inset:0;z-index:4;overflow:hidden}
+.dot{
+  position:absolute;width:4px;height:4px;border-radius:50%;
+  background:var(--accent);opacity:0;
+  animation:dotPop 1.8s ease-in-out infinite;
+}
+@keyframes dotPop{
+  0%,100%{opacity:0;transform:scale(0)}
+  50%{opacity:1;transform:scale(1)}
+}
+
+.scan-label{
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:600;
+  color:var(--accent);letter-spacing:2px;text-transform:uppercase;
+  animation:pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:0.5}50%{opacity:1}}
+.scan-progress{
+  width:200px;height:3px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;
+}
+.scan-bar{
+  height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border-radius:4px;animation:barFill 2.5s ease-in-out forwards;
+}
+@keyframes barFill{0%{width:0%}100%{width:95%}}
+</style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<!-- Scan overlay -->
+<div class="scan-overlay" id="scanOverlay">
+  <div class="scan-box" id="scanBox">
+    <img class="scan-img" id="scanImg" src="" alt="">
+    <div class="scan-line"></div>
+    <div class="corner-tr"></div>
+    <div class="corner-bl"></div>
+    <div class="scan-dots" id="scanDots"></div>
+  </div>
+  <div class="scan-label" id="scanLabel">Mendeteksi Wajah</div>
+  <div class="scan-progress"><div class="scan-bar"></div></div>
+</div>
+
+<div class="shell">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">✂</div>
+      HairStyle AI
+    </div>
+    <p class="tagline">Analisis bentuk wajah & rekomendasi gaya rambut berbasis AI</p>
+  </div>
+
+  <div class="card">
+    <form method="POST" action="/process" enctype="multipart/form-data" id="mainForm">
+
+      <!-- Upload -->
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" name="image" id="fileInput" accept="image/*" required>
+        <img class="upload-preview" id="previewImg" alt="">
+        <div id="uploadUI">
+          <span class="upload-icon">⬆</span>
+          <div class="upload-label">Upload Foto Wajah</div>
+          <div class="upload-hint">JPG, PNG, WEBP · Pastikan wajah terlihat jelas</div>
+        </div>
+        <div class="upload-name" id="uploadName"></div>
+      </div>
+
+      <div class="fields">
+
+        <!-- Jenis Kelamin -->
+        <div>
+          <label class="field-label">Jenis Kelamin</label>
+          <div class="pill-group" id="genderGroup">
+            <button type="button" class="pill" data-val="female" onclick="setPill('gender','female',this)">
+              <span>♀ Perempuan</span>
+            </button>
+            <button type="button" class="pill" data-val="male" onclick="setPill('gender','male',this)">
+              <span>♂ Laki-laki</span>
+            </button>
+          </div>
+          <input type="hidden" name="gender" id="genderVal">
+        </div>
+
+        <!-- Hijab (show if female) -->
+        <div class="hijab-wrap" id="hijabWrap">
+          <label class="field-label">Pakai Hijab?</label>
+          <div class="pill-group">
+            <button type="button" class="pill" data-val="no" onclick="setPill('hijab','no',this)">
+              <span>Tidak</span>
+            </button>
+            <button type="button" class="pill" data-val="yes" onclick="setPill('hijab','yes',this)">
+              <span>Ya</span>
+            </button>
+          </div>
+          <input type="hidden" name="hijab" id="hijabVal" value="no">
+        </div>
+
+        <!-- Jenis Rambut -->
+        <div>
+          <label class="field-label">Jenis Rambut</label>
+          <div class="pill-group">
+            <button type="button" class="pill" onclick="setPill('hair','straight',this)"><span>Lurus</span></button>
+            <button type="button" class="pill" onclick="setPill('hair','wavy',this)"><span>Bergelombang</span></button>
+            <button type="button" class="pill" onclick="setPill('hair','curly',this)"><span>Keriting</span></button>
+          </div>
+          <input type="hidden" name="hair_type" id="hairVal">
+        </div>
+
+        <button type="submit" class="btn-analyze" id="btnAnalyze" disabled>
+          Mulai Analisis →
+        </button>
+
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const state = { gender:null, hijab:'no', hair:null, file:false };
+
+function setPill(group, val, el) {
+  const parent = el.closest('.pill-group');
+  parent.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  state[group] = val;
+  if (group==='gender') {
+    document.getElementById('genderVal').value = val;
+    document.getElementById('hijabWrap').classList.toggle('show', val==='female');
+    if (val==='male') { state.hijab='no'; document.getElementById('hijabVal').value='no'; }
+  }
+  if (group==='hijab') document.getElementById('hijabVal').value = val;
+  if (group==='hair') document.getElementById('hairVal').value = val;
+  checkReady();
+}
+
+function checkReady() {
+  const ready = state.file && state.gender && state.hair;
+  document.getElementById('btnAnalyze').disabled = !ready;
+}
+
+// File input
+const fileInput = document.getElementById('fileInput');
+const previewImg = document.getElementById('previewImg');
+const uploadUI = document.getElementById('uploadUI');
+const uploadName = document.getElementById('uploadName');
+
+fileInput.addEventListener('change', function() {
+  if (this.files[0]) {
+    const url = URL.createObjectURL(this.files[0]);
+    previewImg.src = url;
+    previewImg.style.display = 'block';
+    uploadUI.style.display = 'none';
+    uploadName.textContent = '✓ ' + this.files[0].name;
+    state.file = true;
+    checkReady();
+  }
+});
+
+// Drag & drop
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+zone.addEventListener('drop', e => {
+  e.preventDefault(); zone.classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) {
+    fileInput.files = e.dataTransfer.files;
+    fileInput.dispatchEvent(new Event('change'));
+  }
+});
+
+// Scan animation on submit
+document.getElementById('mainForm').addEventListener('submit', function(e) {
+  const overlay = document.getElementById('scanOverlay');
+  const scanImg = document.getElementById('scanImg');
+  if (previewImg.src) scanImg.src = previewImg.src;
+  overlay.classList.add('active');
+
+  // Generate floating dots
+  const dotsEl = document.getElementById('scanDots');
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < 12; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.style.cssText = `left:${Math.random()*90+5}%;top:${Math.random()*90+5}%;
+      animation-delay:${Math.random()*1.8}s;
+      background:${Math.random()>.5?'var(--accent)':'var(--accent2)'};`;
+    dotsEl.appendChild(d);
+  }
+
+  // Rotating labels
+  const labels = ['Mendeteksi Wajah…','Menganalisis Landmark…','Mengukur Proporsi…','Membuat Rekomendasi…'];
+  let li = 0;
+  const lbl = document.getElementById('scanLabel');
+  const iv = setInterval(() => { lbl.textContent = labels[Math.min(++li, labels.length-1)]; if(li>=labels.length-1) clearInterval(iv); }, 700);
+});
+</script>
+</body>
+</html>
